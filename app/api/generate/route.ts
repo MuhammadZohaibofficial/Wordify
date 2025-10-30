@@ -1,29 +1,57 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from 'groq-sdk';
+
+// Groq client banayein
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+});
 
 export async function POST(request: Request) {
   try {
     const { keyword, tone } = await request.json();
-    if (!keyword) return NextResponse.json({ error: 'Keyword is required.' }, { status: 400 });
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    
-    const prompt = `You are "Wordify," a witty social media expert. Generate 8 short, engaging captions for a social media post.
-    The user's keyword is: "${keyword}"
-    The desired tone is: "${tone || 'neutral'}"
-    Rules: Use emojis. Keep it concise. Output ONLY as a valid JSON array of strings. Example: ["Caption 1", "Caption 2"]`;
-    
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    // Input validation
+    if (!keyword || typeof keyword !== 'string' || keyword.trim().length === 0) {
+      return NextResponse.json({ error: 'Keyword is required.' }, { status: 400 });
+    }
 
-    const cleanedText = text.trim().replace(/^```json\n/, '').replace(/\n```$/, '');
-    const captions = JSON.parse(cleanedText);
+    // AI ko call karein
+    const chatCompletion = await groq.chat.completions.create({
+      // Messages to send to the model
+      messages: [
+        {
+          role: 'system',
+          content: `You are "Wordify," a witty and creative social media expert. Your task is to generate 8 unique, short, and engaging captions. Provide the output ONLY as a valid JSON array of strings, with no other text, explanation, or markdown. For example: ["Caption 1", "Caption 2"]`
+        },
+        {
+          role: 'user',
+          content: `Generate captions for the keyword: "${keyword}" with a "${tone || 'neutral'}" tone.`,
+        },
+      ],
+      // Model ka naam
+      model: 'llama3-8b-8192',
+      // Yeh line AI ko force karegi ke woh JSON format mein hi jawab de
+      response_format: { type: "json_object" }, 
+    });
+    
+    // AI se jawab lein
+    const responseContent = chatCompletion.choices[0]?.message?.content;
+
+    if (!responseContent) {
+      throw new Error("AI returned an empty response.");
+    }
+    
+    // Jawab ko user ko bhejein
+    // Groq ke JSON mode mein, jawab { "captions": [...] } jaisa ho sakta hai,
+    // isliye hum usay parse karke direct captions bhej rahe hain
+    const responseObject = JSON.parse(responseContent);
+    const captions = responseObject.captions || responseObject; // Handle both direct array and object cases
 
     return NextResponse.json({ captions });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Failed to generate captions from AI.' }, { status: 500 });
+
+  } catch (error: any) {
+    // Error handling
+    console.error("Error in Groq API call:", error);
+    return NextResponse.json({ error: `Failed to generate captions from AI. Reason: ${error.message}` }, { status: 500 });
   }
-                                            }
+          }
