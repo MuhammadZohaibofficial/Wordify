@@ -1,56 +1,50 @@
 import { NextResponse } from 'next/server';
-import Groq from 'groq-sdk';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 
-// Groq client banayein
-// Yeh line Render ke Environment Variable se key uthayegi
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+// API Key ko environment variable se lena
+const API_KEY = process.env.GEMINI_API_KEY;
+
+// Check if the API key is available. Agar nahi hai, to server shuru hi nahi hoga.
+if (!API_KEY) {
+  throw new Error("FATAL ERROR: GEMINI_API_KEY environment variable is not set.");
+}
+
+const genAI = new GoogleGenerativeAI(API_KEY);
 
 export async function POST(request: Request) {
   try {
     const { keyword, tone } = await request.json();
 
-    // Input validation
-    if (!keyword || typeof keyword !== 'string' || keyword.trim().length === 0) {
+    if (!keyword) {
       return NextResponse.json({ error: 'Keyword is required.' }, { status: 400 });
     }
 
-    // AI ko call karein
-    const chatCompletion = await groq.chat.completions.create({
-      // Messages to send to the model
-      messages: [
-        {
-          role: 'system',
-          content: `You are "Wordify," a witty and creative social media expert. Your task is to generate 8 unique, short, and engaging captions. Provide the output ONLY as a valid JSON array of strings, with no other text, explanation, or markdown. For example: ["Caption 1", "Caption 2"]`
-        },
-        {
-          role: 'user',
-          content: `Generate captions for the keyword: "${keyword}" with a "${tone || 'neutral'}" tone.`,
-        },
-      ],
-      // YAHAN SAB SE LATEST AUR STABLE MODEL KA NAAM LIKHA HAI
-      model: 'llama3-8b-8192',
-      // Yeh line AI ko force karegi ke woh JSON format mein hi jawab de
-      response_format: { type: "json_object" }, 
-    });
-    
-    // AI se jawab lein
-    const responseContent = chatCompletion.choices[0]?.message?.content;
+    // Hum Google ka stable aur fast model istemal kar rahe hain
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
-    if (!responseContent) {
-      throw new Error("AI returned an empty response.");
-    }
+    const prompt = `You are "Wordify," a witty social media expert. Generate 8 short, engaging captions for a social media post.
+    The user's keyword is: "${keyword}"
+    The desired tone is: "${tone || 'neutral'}"
+    Rules: Use emojis. Keep it concise. Provide the output ONLY as a valid JSON array of strings. Example: ["Caption 1", "Caption 2"]`;
+
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
     
-    // Jawab ko user ko bhejein
-    const responseObject = JSON.parse(responseContent);
-    const captions = responseObject.captions || responseObject;
+    // AI ke jawab ko saaf karna taake woh hamesha JSON ho
+    const cleanedText = responseText.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
+
+    let captions;
+    try {
+        captions = JSON.parse(cleanedText);
+    } catch (e) {
+        console.error("Failed to parse AI response as JSON:", cleanedText);
+        throw new Error("AI returned an invalid format. Could not parse JSON.");
+    }
 
     return NextResponse.json({ captions });
 
   } catch (error: any) {
-    // Error handling
-    console.error("Error in Groq API call:", error);
+    console.error("Error in Gemini API call:", error);
     return NextResponse.json({ error: `Failed to generate captions from AI. Reason: ${error.message}` }, { status: 500 });
   }
-                                                          }
+    }
