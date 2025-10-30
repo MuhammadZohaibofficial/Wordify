@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+// Yahan hum 'motion' aur 'AnimatePresence' ko abhi istemal nahi kar rahe to hata dete hain
+// import { motion, AnimatePresence } from 'framer-motion'; 
 import { Sun, Moon, Copy, Check, Wand2 } from 'lucide-react';
 
 const TONES = [
@@ -26,7 +27,10 @@ export default function WordifyHome() {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!keyword.trim()) return setError('Please enter a keyword.');
+    if (!keyword.trim()) {
+      setError('Please enter a keyword.');
+      return;
+    }
     
     setIsLoading(true);
     setCaptions([]);
@@ -39,7 +43,10 @@ export default function WordifyHome() {
         body: JSON.stringify({ keyword, tone: selectedTone }),
       });
 
-      if (!response.ok) throw new Error('Failed to generate captions. Please try again.');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate captions.');
+      }
       const data = await response.json();
       setCaptions(data.captions);
 
@@ -81,12 +88,10 @@ export default function WordifyHome() {
         </form>
 
         <div className="w-full mt-12 space-y-4">
-          <AnimatePresence>
-            {error && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-500">{error}</motion.div>}
-            {captions.map((caption, index) => (<motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="relative text-left p-4 bg-white dark:bg-gray-800 border rounded-lg"><p className="pr-10">{caption}</p><button onClick={() => handleCopy(caption, index)} className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">{copiedIndex === index ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}</button></motion.div>))}
-          </AnimatePresence>
+            {error && <div className="text-red-500">{error}</div>}
+            {captions.map((caption, index) => (<div key={index} className="relative text-left p-4 bg-white dark:bg-gray-800 border rounded-lg"><p className="pr-10">{caption}</p><button onClick={() => handleCopy(caption, index)} className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">{copiedIndex === index ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}</button></div>))}
         </div>
       </main>
     </div>
   );
-}
+      }
