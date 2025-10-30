@@ -19,8 +19,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Keyword is required.' }, { status: 400 });
     }
 
-    // HUM AB GOOGLE KA SAB SE STABLE AUR RELIABLE MODEL ISTEMAL KAR RAHE HAIN
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Hum Google ka naya aur fast model istemal kar rahe hain jo nayi library ke sath chalta hai
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `You are "Wordify," a witty social media expert. Generate 8 short, engaging captions for a social media post.
     The user's keyword is: "${keyword}"
@@ -47,4 +47,4 @@ export async function POST(request: Request) {
     console.error("Error in Gemini API call:", error);
     return NextResponse.json({ error: `Failed to generate captions from AI. Reason: ${error.message}` }, { status: 500 });
   }
-  }
+}
