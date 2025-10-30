@@ -4,7 +4,7 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/ge
 // API Key ko environment variable se lena
 const API_KEY = process.env.GEMINI_API_KEY;
 
-// Check if the API key is available. Agar nahi hai, to server shuru hi nahi hoga.
+// Agar API key nahi hai to foran error dein
 if (!API_KEY) {
   throw new Error("FATAL ERROR: GEMINI_API_KEY environment variable is not set.");
 }
@@ -19,8 +19,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Keyword is required.' }, { status: 400 });
     }
 
-    // Hum Google ka stable aur fast model istemal kar rahe hain
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    // HUM AB GOOGLE KA SAB SE STABLE AUR RELIABLE MODEL ISTEMAL KAR RAHE HAIN
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `You are "Wordify," a witty social media expert. Generate 8 short, engaging captions for a social media post.
     The user's keyword is: "${keyword}"
@@ -47,4 +47,4 @@ export async function POST(request: Request) {
     console.error("Error in Gemini API call:", error);
     return NextResponse.json({ error: `Failed to generate captions from AI. Reason: ${error.message}` }, { status: 500 });
   }
-    }
+  }
