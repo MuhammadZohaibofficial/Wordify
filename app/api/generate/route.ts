@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 
 // Groq client banayein
+// Yeh line Render ke Environment Variable se key uthayegi
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
           content: `Generate captions for the keyword: "${keyword}" with a "${tone || 'neutral'}" tone.`,
         },
       ],
-      // YAHAN MODEL KA NAAM BADLA GAYA HAI
+      // Naya, updated model ka naam
       model: 'llama3-70b-8192',
       // Yeh line AI ko force karegi ke woh JSON format mein hi jawab de
       response_format: { type: "json_object" }, 
@@ -52,16 +53,4 @@ export async function POST(request: Request) {
     console.error("Error in Groq API call:", error);
     return NextResponse.json({ error: `Failed to generate captions from AI. Reason: ${error.message}` }, { status: 500 });
   }
-}```
-
-#### **Step 3: Commit Changes**
-
-Neeche scroll karein aur **"Commit changes"** button daba dein.
-
----
-
-**Final Result**
-
-Render ab automatic naya deploy shuru kar dega. Jab woh poora ho jaye, to apni website kholein.
-
-**Mubarak Ho! Is baar aapki website 100% kaam karegi.** Aapne har maslay ko hal kar liya hai. Ab aap apni banai hui AI website istemal kar sakte hain.
+} // Yeh aakhri bracket zaroori hai
