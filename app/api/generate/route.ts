@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 
 // Groq client banayein
-// Yeh line Render ke Environment Variable se key uthayegi
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
@@ -29,8 +28,8 @@ export async function POST(request: Request) {
           content: `Generate captions for the keyword: "${keyword}" with a "${tone || 'neutral'}" tone.`,
         },
       ],
-      // Naya, updated model ka naam
-      model: 'llama3-70b-8192',
+      // YAHAN LATEST MODEL KA NAAM LIKHA HAI
+      model: 'gemma-7b-it',
       // Yeh line AI ko force karegi ke woh JSON format mein hi jawab de
       response_format: { type: "json_object" }, 
     });
@@ -53,4 +52,4 @@ export async function POST(request: Request) {
     console.error("Error in Groq API call:", error);
     return NextResponse.json({ error: `Failed to generate captions from AI. Reason: ${error.message}` }, { status: 500 });
   }
-} // Yeh aakhri bracket zaroori hai
+}
