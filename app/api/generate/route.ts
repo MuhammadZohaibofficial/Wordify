@@ -47,4 +47,4 @@ export async function POST(request: Request) {
     console.error("Error in Gemini API call:", error);
     return NextResponse.json({ error: `Failed to generate captions from AI. Reason: ${error.message}` }, { status: 500 });
   }
-}
+  }
