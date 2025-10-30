@@ -28,8 +28,8 @@ export async function POST(request: Request) {
           content: `Generate captions for the keyword: "${keyword}" with a "${tone || 'neutral'}" tone.`,
         },
       ],
-      // YAHAN LATEST MODEL KA NAAM LIKHA HAI
-      model: 'gemma-7b-it',
+      // YAHAN SAB SE LATEST AUR STABLE MODEL KA NAAM LIKHA HAI
+      model: 'llama3.1-70b-versatile',
       // Yeh line AI ko force karegi ke woh JSON format mein hi jawab de
       response_format: { type: "json_object" }, 
     });
